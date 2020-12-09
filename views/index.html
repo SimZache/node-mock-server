@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./index.css">
+    <script src="./jquery.min.js"></script>
+</head>
+
+<body>
+    <div>
+        第几页<input type="number" id="number" value="1">
+        分页条数<input type="number" id="count" value="20" step="5">
+        <button onclick="getList()">获取数据列表</button>
+        <ul id="list"></ul>
+    </div>
+    <div><button onclick="addItem()">新增数据</button></div>
+    <script>
+        $(document).ready(function () {
+            getList()
+        })
+        function getList() {
+            $.ajax({
+                type: "GET",
+                url: "/list",
+                data: { page: $('#number').val() || 1, count: $('#count').val() || 10 },
+                dataType: "json",
+                success: function (data) {
+                    console.log(data)
+                    var str = ''
+                    $.each(data, (i, data) => {
+                        str += `<li id=${data.id}><span>${data.name}</span><button class="edit">修改</button><button class="delete">删除</button></li>`
+                        console.log(i, data)
+                    })
+                    $('#list').html(str)
+                },
+                error: function (err) {
+                    console.log("Error: ", err);
+                }
+            });
+        }
+        function addItem() {
+            $.ajax({
+                type: "POST",
+                url: "/add",
+                dataType: "json",
+                success: function (data) {
+                    console.log(data)
+                    getList()
+                },
+                error: function (err) {
+                    console.log("Error: ", err);
+                }
+            });
+        }
+        $('#list').on('click', '.edit', function () {
+            console.log($(this).parent().attr('id'))
+            let id = $(this).parent().attr('id')
+            editItem(id, $(this))
+        })
+        function editItem(id, node) {
+            $.ajax({
+                type: "POST",
+                url: "/edit",
+                dataType: "json",
+                data: { id },
+                success: function (data) {
+                    console.log(data)
+                    node.siblings('span').text(data.name)
+                },
+                error: function (err) {
+                    console.log("Error: ", err);
+                }
+            });
+        }
+        $('#list').on('click', '.delete', function () {
+            let id = $(this).parent().attr('id')
+            deleteItem(id, $(this))
+        })
+        function deleteItem(id, node) {
+            $.ajax({
+                type: "POST",
+                url: "/delete",
+                dataType: "json",
+                data: { id },
+                success: function (data) {
+                    console.log(data, node.parents('ul'), node.parent())
+                    // node.parents('ul').remove(node.parent())
+                    node.parent().remove()
+                },
+                error: function (err) {
+                    console.log("Error: ", err);
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
